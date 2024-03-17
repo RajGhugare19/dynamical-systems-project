@@ -79,7 +79,7 @@ a trajectory with (these have standard numerical names, look up on wikipedia)
 the initial state of a different trajectory.
 
 returns:
-- cellular_automaton: a list of lists, where each list is a state in the trajectory
+- trajs: a list of trajectories (list of lists), each seeded with a seed from seed_list
 
 '''
 
