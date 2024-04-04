@@ -2,13 +2,13 @@ from automata import gather_rule_trajectories, plot_traj
 import numpy as np
 
 def main(params):
-    file_name_train = "automata-state_size-{}-traj_len-{}-rule-{}-train1.csv".format(str(params["state_size"]),
+    file_name_train = "automata-state_size-{}-traj_len-{}-rule-{}-train1_x.csv".format(str(params["state_size"]),
                                                                               str(params["traj_len"]),
                                                                               str(params["rule"]))
-    file_name_val = "automata-state_size-{}-traj_len-{}-rule-{}-val.csv".format(str(params["state_size"]),
+    file_name_val = "automata-state_size-{}-traj_len-{}-rule-{}-val_x.csv".format(str(params["state_size"]),
                                                                               str(params["traj_len"]),
                                                                               str(params["rule"]))
-    file_name_test = "automata-state_size-{}-traj_len-{}-rule-{}-test.csv".format(str(params["state_size"]),
+    file_name_test = "automata-state_size-{}-traj_len-{}-rule-{}-test_x.csv".format(str(params["state_size"]),
                                                                               str(params["traj_len"]),
                                                                               str(params["rule"]))
     trajs = gather_rule_trajectories(state_size=params["state_size"],
