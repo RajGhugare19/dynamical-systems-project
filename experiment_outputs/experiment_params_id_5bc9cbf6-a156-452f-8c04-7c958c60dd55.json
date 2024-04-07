@@ -1,0 +1,1 @@
+{"state_size": 5, "traj_len": 50, "rule": 110, "max_iter": 6000, "hidden_dim": 256, "hidden_enc_dim": 128, "lr": 0.001, "num_hidden_layers": 2, "metric_loss_weight": 0.01, "pred_loss_weight": 0.01}
