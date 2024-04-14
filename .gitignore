@@ -162,3 +162,5 @@ cython_debug/
 
 # Test binaries
 test/*
+
+lightning_logs/
