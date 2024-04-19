@@ -7,7 +7,9 @@ from pathlib import Path
 import automata as atmt
 import sys
 import json
+import random
 import optuna
+import itertools
 sys.path.append("..")
 import autokoopman.core.trajectory as atraj
 import pandas as pd
@@ -46,20 +48,27 @@ def to_autokoopman_traj_data(state_size, traj_len, trajs):
 
 
 def generate_data(state_size, traj_len, rule):
-    train_trajs = np.array(atmt.gather_rule_trajectories(state_size=state_size,
-                                        traj_len=traj_len,
-                                        rule=rule,
-                                        seed_list=[i for i in range(1000)]))
 
-    val_trajs = np.array(atmt.gather_rule_trajectories(state_size=state_size,
-                                        traj_len=traj_len,
-                                        rule=rule,
-                                        seed_list=[i for i in range(1000, 1350)]))
-
-    test_trajs = np.array(atmt.gather_rule_trajectories(state_size=state_size,
-                                        traj_len=traj_len,
-                                        rule=rule,
-                                        seed_list=[i for i in range(1350, 1500)]))
+    # shuffle with a fixed seed
+    start_state_permutations = list(itertools.product([0, 1], repeat=state_size))
+    random.Random(0).shuffle(start_state_permutations) # this is fine because our state space is usually small enough
+    start_state_permutations = np.array(start_state_permutations)
+    print(start_state_permutations.shape)
+    end_train = int(start_state_permutations.shape[0]*0.65) 
+    end_val = end_train + int(start_state_permutations.shape[0]*0.20)
+    
+    train_perms = start_state_permutations[:end_train]
+    val_perms = start_state_permutations[end_train: end_val]
+    test_perms = start_state_permutations[end_val:]
+    
+    print("unique train: ", len(np.unique(train_perms)))
+    print("unique val: ", len(np.unique(val_perms)))
+    print("unique test: ", len(np.unique(test_perms)))
+    
+    
+    train_trajs = np.array(atmt.gather_rule_trajs_from_starts(starts=train_perms, traj_len=traj_len, rule=rule))
+    val_trajs = np.array(atmt.gather_rule_trajs_from_starts(starts=val_perms, traj_len=traj_len, rule=rule))
+    test_trajs = np.array(atmt.gather_rule_trajs_from_starts(starts=test_perms, traj_len=traj_len, rule=rule))
 
     print(train_trajs.shape, val_trajs.shape, test_trajs.shape)
     train_data = to_autokoopman_traj_data(state_size, traj_len, train_trajs)
@@ -134,7 +143,7 @@ def train(train_data, val_data, state_size, traj_len, rule, results_dir):
         return val_loss
 
     study = optuna.create_study(direction='minimize')
-    study.optimize(objective, n_trials=30)
+    study.optimize(objective, n_trials=1)
     
     return study.best_params, study.best_value
     
@@ -206,4 +215,5 @@ def main():
     rule = int(sys.argv[2])
     run_experiment(exp_name, rule)
 
-main()
+if __name__ in "__main__":
+    main()

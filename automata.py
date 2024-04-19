@@ -63,6 +63,12 @@ def simulate_automata(state_size, traj_len, rule, seed):
     return cellular_automaton
     
 
+def simulate_automata_from_start_state(start_state, traj_len, rule):
+
+    cellular_automaton = cpl.evolve(start_state, timesteps=traj_len, memoize=True,
+                                    apply_rule=lambda n, c, t: cpl.nks_rule(n, rule))
+    return cellular_automaton
+
 '''
 function: gather_rule_trajectories
 
@@ -82,6 +88,12 @@ returns:
 - trajs: a list of trajectories (list of lists), each seeded with a seed from seed_list
 
 '''
+def gather_rule_trajs_from_starts(starts, traj_len, rule):
+    trajs = []    
+    for s in starts:
+        trajs.append(simulate_automata_from_start_state(start_state=np.reshape(s, (1, s.shape[0])), traj_len=traj_len, rule=rule))
+    return trajs
+
 
 def gather_rule_trajectories(state_size, traj_len, rule, seed_list):
     trajs = []
