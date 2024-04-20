@@ -81,53 +81,66 @@ def one_step_mse(dlk_regressor, val_data):
         mse_list.append(mse)
     
     avg_mse = sum(mse_list)/float(len(mse_list))
-    return avg_mse
+    return avg_mse, mse_list
 
 
-def train(train_data, val_data, look_forward, intrinsic_cords, hidden_dim, num_layers, batch_size=2050, max_epochs=100, patience=10):
+'''
+            "relu": nn.ReLU(),
+            "sigmoid": nn.Sigmoid(),
+            "tanh": nn.Tanh(),
+            "swish": nn.SiLU(),
+            "elu": nn.ELU(),
+            "mish": nn.Mish(),
+            "linear": nn.Identity(),
+'''
+
+def train(train_data, val_data, look_forward, intrinsic_cords, hidden_dim, num_layers, batch_size=64, max_epochs=25, patience=5):
     # TODO: figure out how to eval validation and implement early stopping
     state_size = train_data[0].shape[1]
     dlk_regressor = pk.regression.NNDMD(dt=1.0, look_forward=look_forward,
                                         config_encoder=dict(input_size=state_size,
                                                             hidden_sizes=[hidden_dim] * num_layers,
                                                             output_size=intrinsic_cords,
-                                                            activations="swish"),
+                                                            activations="relu"),
                                         config_decoder=dict(input_size=intrinsic_cords, hidden_sizes=[hidden_dim] * num_layers,
                                                             output_size=state_size, activations="linear"),
                                         batch_size=batch_size, lbfgs=False,
                                         normalize=True, normalize_mode='equal',
                                         normalize_std_factor=1.0,
-                                        trainer_kwargs=dict(max_epochs=1))
+                                        trainer_kwargs=dict(max_epochs=1)) # keep max_epochs here as 1. we want to validate after each epoch as done below
     
     inc = 0
     avg_mse_val = np.inf
+    best_val = np.inf
+    
     for epoch in range(max_epochs):
+        
         print(">>>>> On Epoch num : ", epoch)
         prev_mse_val = avg_mse_val
-        prev_regressor = deepcopy(dlk_regressor)
         dlk_regressor.fit(train_data)
-        avg_mse_train = one_step_mse(dlk_regressor, train_data)
-        avg_mse_val = one_step_mse(dlk_regressor, val_data)
+        avg_mse_train, _ = one_step_mse(dlk_regressor, train_data)
+        avg_mse_val, _ = one_step_mse(dlk_regressor, val_data)
         print("Train avg 1 step MSE: ", avg_mse_train)
         print("Val avg 1 step MSE: ", avg_mse_val)
         
-        
-         
+        if(best_val > avg_mse_val):
+            best_val = avg_mse_val
+            best_regressor = deepcopy(dlk_regressor)
+            
+            
         if(avg_mse_val > prev_mse_val):
             inc += 1
-            if(inc == 1):
-                best_regressor = prev_regressor
-                best_val = prev_mse_val
             print(">>>>> Early stopping increment up to: ", inc)
             
         else:
             inc = 0
         
+        print("Best val avg 1 step MSE: ", best_val)
         if(inc > patience):
             print("Early stopping at epoch : ", epoch)
             break
+
             
-        
     return best_regressor, best_val
 
 def save_model(trained_koop_obj, model_save_dir):
@@ -145,17 +158,33 @@ def run_experiment(params, exp_name):
           params['hidden_dim'], params['num_layers'])
     
     save_model(model, results_dir)
+    
+    test_avg_mse, test_mses = one_step_mse(model, test_data)
+    print("Test avg mse: ", test_avg_mse)
+    print("Test MSEs: ", test_mses)
+    
+    np.save("{}/test_mse.npy".format(results_dir), np.array(test_mses))
+    plt.figure(figsize=(5, 10))
+    plt.boxplot(test_mses)
+    plt.ylim(0.0, 0.6)
+    plt.xticks([1], ["Rule {}".format(str(params['rule']))])
+    plt.savefig("{}/test_mse_plot.pdf".format(results_dir))
+    
+    
 
 if __name__ in "__main__":
-    exp_name = sys.argv[0]
-    params = {'state_size': 6,
+    exp_name = sys.argv[1]
+    rule = int(sys.argv[2])
+    
+    params = {'state_size': 12,
             'traj_len': 50,
-            'rule': 0,
+            'rule': rule,
             'look_forward': 1,
             'intrinsic_cords': 512,
             'hidden_dim': 128,
             'num_layers': 2
             }
+    
     run_experiment(params, exp_name)
     
     
