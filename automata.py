@@ -91,7 +91,7 @@ returns:
 def gather_rule_trajs_from_starts(starts, traj_len, rule):
     trajs = []    
     for s in starts:
-        trajs.append(simulate_automata_from_start_state(start_state=np.reshape(s, (1, s.shape[0])), traj_len=traj_len, rule=rule))
+        trajs.append(simulate_automata_from_start_state(start_state=np.reshape(s, (1, len(s))), traj_len=traj_len, rule=rule))
     return trajs
 
 
