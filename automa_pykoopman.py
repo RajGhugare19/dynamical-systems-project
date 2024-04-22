@@ -256,6 +256,8 @@ def run_experiment(params, exp_name, seed):
           params['hidden_dim'], params['num_layers'], compo_test_type=params['compo_test_type'])
     
     save_model(model, results_dir)
+    in_comb_test_mse = np.inf
+    out_comb_test_mse = np.inf
     
     test_avg_mse, test_mses = one_step_mse(model, test_data)
     print("Test avg mse: ", test_avg_mse)
@@ -286,6 +288,7 @@ if __name__ in "__main__":
     exp_name = sys.argv[1]
     rule = int(sys.argv[2])
     seed = int(sys.argv[3])
+    compo_test_type = sys.argv[4]
 
     np.random.seed(seed) 
 
@@ -297,7 +300,7 @@ if __name__ in "__main__":
             'intrinsic_cords': 512,
             'hidden_dim': 128,
             'num_layers': 2,
-            'compo_test_type': "strong"
+            'compo_test_type': compo_test_type
             }
     
     run_experiment(params, exp_name, seed)
