@@ -164,3 +164,5 @@ cython_debug/
 test/*
 
 lightning_logs/
+
+experiment_outputs/
